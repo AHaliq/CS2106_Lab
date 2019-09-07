@@ -1,8 +1,8 @@
 /*************************************
  * Lab 2 Exercise 2
- * Name:
- * Student No:
- * Lab Group:
+ * Name: Abdul Haliq S/O Abdul Latiff
+ * Student No: A0125431U
+ * Lab Group: B-08
  *************************************
  Warning: Make sure your code works on
  lab machine (Linux on x86)
