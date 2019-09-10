@@ -19,7 +19,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-void readFromFile(char who[50], int fd);
+void readFromFile(char who[50], int fd, int r1);
+void readFromFileF(char who[50], FILE* fp, int r1);
 
 int main(int argc, char **argv)
 {
@@ -44,6 +45,8 @@ int main(int argc, char **argv)
 
     if (fd != -1)
     {
+        sprintf(who, "Parent [%d]", getpid());
+	readFromFile(who, fd, 1);
         for (i = 0; i < nChild; i++)
         {
             childPid = fork();
@@ -54,13 +57,9 @@ int main(int argc, char **argv)
         {
             sprintf(who, "Child %d[%d]", i + 1, getpid());
         }
-        else
-        {
-            sprintf(who, "Parent [%d]", getpid());
-        }
         // get process title and pid
 
-        readFromFile(who, fd);
+        readFromFile(who, fd, 0);
 
         if (childPid != 0)
         {
@@ -71,19 +70,58 @@ int main(int argc, char **argv)
                 sprintf(strBuf, "Parent: Child %d [%d] done.\n", WEXITSTATUS(status), childPid);
                 write(STDOUT_FILENO, strBuf, strlen(strBuf));
             }
-            close(fd);
         }
         // parent waits for all children
+        close(fd);
     }
     
     if(childPid != 0) {
+	FILE* fp = fopen(fileName, "r");
+	if(fp != NULL) {
+	    readFromFileF(who, fp, 1);
+	    for(i = 0; i < nChild; i++) {
+		childPid = fork();
+		if(childPid == 0) break;
+	    }
+ 	    if(childPid == 0) sprintf(who, "Child %d[%d]", i + 1, getpid());
+	
+	    readFromFileF(who, fp, 0);
+	    if(childPid != 0) {
+		int status;
+		for(i = 0; i < nChild; i++) {
+			childPid = wait(&status);
+			sprintf(strBuf, "Parent: Child %d [%d] done.\n", WEXITSTATUS(status), childPid);
+			write(STDOUT_FILENO, strBuf, strlen(strBuf));
+		}
+	    }
+	    fclose(fp);
+	}
+	if(childPid != 0) {
         sprintf(strBuf, "Parent: Exiting.\n");
         write(STDOUT_FILENO, strBuf, strlen(strBuf));
+	}
     }
     return i + 1;
 }
 
-void readFromFile(char who[50], int fd)
+void readFromFileF(char who[50], FILE* fp, int r1) {
+    ssize_t readBytes = 1;
+    char charBuf = 0;
+    char strBuf[128];
+    
+    while(readBytes > 0) {
+	usleep(1000);
+        charBuf = 0;
+        readBytes = fread(&charBuf, 1, 1, fp);
+	
+	if (readBytes != 1) if(readBytes == 0) return;
+	sprintf(strBuf, "%s: %c\n", who, charBuf);
+	write(STDOUT_FILENO, strBuf, strlen(strBuf));
+	if(r1) return;
+    }
+}
+
+void readFromFile(char who[50], int fd, int r1)
 {
     ssize_t readBytes = 1;
     char charBuf = 0;
@@ -106,5 +144,6 @@ void readFromFile(char who[50], int fd)
         sprintf(strBuf, "%s: %c\n", who, charBuf);
         write(STDOUT_FILENO, strBuf, strlen(strBuf));
         //TODO add your code
+	if(r1) return;
     }
 }
