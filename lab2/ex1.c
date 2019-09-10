@@ -80,7 +80,7 @@ int main(int argc, char **argv)
         sprintf(strBuf, "Parent: Exiting.\n");
         write(STDOUT_FILENO, strBuf, strlen(strBuf));
     }
-    return i;
+    return i + 1;
 }
 
 void readFromFile(char who[50], int fd)
