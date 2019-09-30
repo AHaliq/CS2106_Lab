@@ -42,6 +42,14 @@ void cleanup()
     free(S);
 }
 
+void openBarrier(int seg)
+{
+    if (S[PREV(seg, num_of_segments)].queue == -1)
+    {
+        sem_post(&S[seg].entry_mutex);
+    } // barrier only opens when no one in queue to enter segment (cars already in roundabout)
+}
+
 void *car(void *car)
 {
     car_struct *c = (struct car_struct *)car;
@@ -63,19 +71,12 @@ void *car(void *car)
         sem_wait(&S[NEXT(old, num_of_segments)].cars_in_seg_mutex);
         S[old].queue = -1;
         move_to_next_segment(c);
-        if (S[PREV(old, num_of_segments)].queue == -1)
-        {
-            sem_post(&S[old].entry_mutex);
-        } // barrier only opens when no one in queue to enter segment (cars already in roundabout)
-
+        openBarrier(old);
         sem_post(&S[old].cars_in_seg_mutex);
     }
     int old = c->current_seg;
-    if (S[PREV(old, num_of_segments)].queue == -1)
-    {
-        sem_post(&S[old].entry_mutex);
-    } // barrier only opens when no one in queue to enter segment (cars already in roundabout)
     exit_roundabout(c);
+    openBarrier(old);
     sem_post(&S[old].cars_in_seg_mutex);
     sem_post(&roundabout_counting);
     pthread_exit(NULL);
