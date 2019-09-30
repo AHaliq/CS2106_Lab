@@ -59,12 +59,9 @@ void *car(void *car)
         move_to_next_segment(c);
         sem_post(&S[old].cars_in_seg_mutex);
     }
-    if (c->current_seg == c->exit_seg)
-    {
-        int old = c->current_seg;
-        exit_roundabout(c);
-        sem_post(&S[old].cars_in_seg_mutex);
-        sem_post(&roundabout_counting);
-    }
+    int old = c->current_seg;
+    exit_roundabout(c);
+    sem_post(&S[old].cars_in_seg_mutex);
+    sem_post(&roundabout_counting);
     pthread_exit(NULL);
 }
