@@ -27,6 +27,7 @@ void initialise()
     {
         sem_init(&S[i].cars_in_seg_mutex, 0, 1);
         sem_init(&S[i].entry_mutex, 0, 1);
+        S[i].queue = -1;
     }
 }
 
@@ -51,31 +52,31 @@ void *car(void *car)
     //   -finally call exit_roundabout (...)
 
     // duplicate segment
-    sem_wait(&roundabout_counting);
     sem_wait(&S[c->entry_seg].entry_mutex); // barrier before entering roundabout
+    sem_wait(&roundabout_counting);
     sem_wait(&S[c->entry_seg].cars_in_seg_mutex);
     enter_roundabout(c);
     while (c->current_seg != c->exit_seg)
     {
         int old = c->current_seg;
+        S[old].queue = c->exit_seg;
         sem_wait(&S[NEXT(old, num_of_segments)].cars_in_seg_mutex);
+        S[old].queue = -1;
         move_to_next_segment(c);
-
-        int v;
-        sem_getvalue(&S[old].cars_in_seg_mutex, &v);
-        if (v >= 0)
+        if (S[PREV(old, num_of_segments)].queue == -1)
         {
             sem_post(&S[old].entry_mutex);
         } // barrier only opens when no one in queue to enter segment (cars already in roundabout)
 
         sem_post(&S[old].cars_in_seg_mutex);
     }
-    if (c->current_seg == c->exit_seg)
+    int old = c->current_seg;
+    if (S[PREV(old, num_of_segments)].queue == -1)
     {
-        int old = c->current_seg;
-        exit_roundabout(c);
-        sem_post(&S[old].cars_in_seg_mutex);
-        sem_post(&roundabout_counting);
-    }
+        sem_post(&S[old].entry_mutex);
+    } // barrier only opens when no one in queue to enter segment (cars already in roundabout)
+    exit_roundabout(c);
+    sem_post(&S[old].cars_in_seg_mutex);
+    sem_post(&roundabout_counting);
     pthread_exit(NULL);
 }

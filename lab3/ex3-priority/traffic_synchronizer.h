@@ -19,6 +19,7 @@ typedef struct
     sem_t cars_in_seg_mutex;
     sem_t entry_mutex;
     int cars_in_seg;
+    int queue;
 } segment_struct;
 
 // Some helpful macros for the program
