@@ -9,13 +9,10 @@
 
 typedef struct
 {
-  pthread_mutex_t mutex;
+  pthread_mutex_t rmutex;
+  pthread_mutex_t wmutex;
   pthread_mutex_t empty;
-  pthread_mutex_t noreader;
-  pthread_mutex_t holdwriters;
   pthread_mutex_t holdreaders;
   int reader_count;
   int writer_count;
-  int reader_tot;
-  int writer_tot;
 } rw_lock;
