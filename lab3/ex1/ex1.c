@@ -20,16 +20,12 @@ void initialise(rw_lock *lock)
 void writer_acquire(rw_lock *lock)
 {
   pthread_mutex_lock(&(lock->empty));
-  pthread_mutex_lock(&(lock->mutex));
   lock->writer_count++;
-  pthread_mutex_unlock(&(lock->mutex));
 }
 
 void writer_release(rw_lock *lock)
 {
-  pthread_mutex_lock(&(lock->mutex));
   lock->writer_count--;
-  pthread_mutex_unlock(&(lock->mutex));
   pthread_mutex_unlock(&(lock->empty));
 }
 

@@ -10,8 +10,7 @@
 
 void initialise(rw_lock *lock)
 {
-  pthread_mutex_init(&(lock->rmutex), NULL);
-  pthread_mutex_init(&(lock->wmutex), NULL);
+  pthread_mutex_init(&(lock->mutex), NULL);
   pthread_mutex_init(&(lock->empty), NULL);
   pthread_mutex_init(&(lock->holdreaders), NULL);
   lock->reader_count = 0;
@@ -22,48 +21,43 @@ void writer_acquire(rw_lock *lock)
 {
   pthread_mutex_lock(&(lock->holdreaders));
   pthread_mutex_lock(&(lock->empty));
-  pthread_mutex_lock(&(lock->wmutex));
   lock->writer_count++;
-  pthread_mutex_unlock(&(lock->wmutex));
 }
 
 void writer_release(rw_lock *lock)
 {
-  pthread_mutex_unlock(&(lock->empty));
-  pthread_mutex_lock(&(lock->wmutex));
   lock->writer_count--;
-  pthread_mutex_unlock(&(lock->wmutex));
+  pthread_mutex_unlock(&(lock->empty));
   pthread_mutex_unlock(&(lock->holdreaders));
 }
 
 void reader_acquire(rw_lock *lock)
 {
   pthread_mutex_lock(&(lock->holdreaders));
-  pthread_mutex_lock(&(lock->rmutex));
+  pthread_mutex_lock(&(lock->mutex));
   if (lock->reader_count == 0)
   {
     pthread_mutex_lock(&(lock->empty));
   }
   lock->reader_count++;
-  pthread_mutex_unlock(&(lock->rmutex));
+  pthread_mutex_unlock(&(lock->mutex));
   pthread_mutex_unlock(&(lock->holdreaders));
 }
 
 void reader_release(rw_lock *lock)
 {
-  pthread_mutex_lock(&(lock->rmutex));
+  pthread_mutex_lock(&(lock->mutex));
   lock->reader_count--;
   if (lock->reader_count == 0)
   {
     pthread_mutex_unlock(&(lock->empty));
   }
-  pthread_mutex_unlock(&(lock->rmutex));
+  pthread_mutex_unlock(&(lock->mutex));
 }
 
 void cleanup(rw_lock *lock)
 {
-  pthread_mutex_destroy(&(lock->rmutex));
-  pthread_mutex_destroy(&(lock->wmutex));
+  pthread_mutex_destroy(&(lock->mutex));
   pthread_mutex_destroy(&(lock->empty));
   pthread_mutex_destroy(&(lock->holdreaders));
 }

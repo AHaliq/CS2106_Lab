@@ -9,8 +9,7 @@
 
 typedef struct
 {
-  pthread_mutex_t rmutex;
-  pthread_mutex_t wmutex;
+  pthread_mutex_t mutex;
   pthread_mutex_t empty;
   pthread_mutex_t holdreaders;
   int reader_count;
