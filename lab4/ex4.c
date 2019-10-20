@@ -161,9 +161,8 @@ void os_run(int initial_num_pages, page_table *pg_table)
             else
             {
                 //printf(" munmap\n");
-                if (page_created[map_page] >= 1)
+                if (page_created[map_page] == 2)
                 {
-                    page_created[map_page] = 0;
                     int frameInd = -1;
                     for (int i = 0; i < numofframes; i++)
                     {
@@ -189,6 +188,7 @@ void os_run(int initial_num_pages, page_table *pg_table)
 
                     disk_delete(map_page);
                 }
+                page_created[map_page] = 0;
                 returnSig(0, info);
             }
         }
