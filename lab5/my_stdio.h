@@ -30,6 +30,9 @@ typedef struct
 	unsigned char *base; // the buffer
 	unsigned char *ptr;	// current position
 	ssize_t cnt;				 // number of available characters in buffer
+	char flag_read;
+	char flag_write;
+	char flag_justwrote;
 } MY_FILE;
 
 MY_FILE *my_fopen(const char *pathname, const char *mode);

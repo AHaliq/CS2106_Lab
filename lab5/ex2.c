@@ -9,39 +9,63 @@
  *************************************/
 
 #include "my_stdio.h"
+#include <stdio.h>
 
 size_t my_fread(void *ptr, size_t size, size_t nmemb, MY_FILE *stream)
 {
+	if (!stream->flag_read || stream->flag_justwrote)
+		return MY_EOF;
+	// terminate if no read flag or didnt flush
 	int remRead = nmemb * size;
 	// calculate total bytes to read
 	int dStart = 0;
 	// capture start index for copy to destination
-	do
+	int res;
+	int totRead = 0;
+	int readAmount;
+	if (stream->cnt > 0)
 	{
-		if (stream->cnt == 0)
+		readAmount = stream->cnt < remRead ? stream->cnt : remRead;
+		memcpy(ptr + dStart, stream->ptr, readAmount);
+		dStart += readAmount;
+		stream->ptr += readAmount;
+		stream->cnt -= readAmount;
+		remRead -= readAmount;
+		totRead += readAmount;
+	}
+	// read initial remaining in buffer
+	if (remRead > 0)
+	{
+		stream->ptr = stream->base;
+		stream->cnt = 0;
+
+		int bufferAmount = remRead / BUFFER_SIZE;
+		if (bufferAmount > 0)
 		{
-			stream->ptr = stream->base;
-			int res = read(stream->fd, stream->base, BUFFER_SIZE);
-			if (res == -1)
-				return -1;
-			// error reading file
-			if (res == 0)
-				break;
-			// if read none, no more, escape loop
-			stream->cnt = res;
+			res = read(stream->fd, ptr + dStart, bufferAmount * BUFFER_SIZE);
+			if (res < 0)
+				return MY_EOF;
+			remRead -= res;
+			totRead += res;
 		}
-		// read new set to buffer if no more available for read
-		int copyAmount = stream->cnt > remRead ? remRead : stream->cnt;
-		// determine how many bytes to copy from buffer
-		memcpy(ptr + dStart, stream->ptr, copyAmount);
-		// copy from buffer to destination
-		dStart += copyAmount;
-		stream->cnt -= copyAmount;
-		stream->ptr += copyAmount;
-		remRead -= copyAmount;
-		// update variables
-	} while (remRead > 0);
-	int bytesRead = (nmemb * size) - remRead;
-	int partialItem = bytesRead % size > 0 ? 1 : 0;
-	return bytesRead == 0 ? 0 : bytesRead / size + partialItem;
+		// read direct from if greater than buffer remaining
+		printf("I WANT TO READ %i\n", remRead);
+		printf("I AM AT %ld\n", lseek(stream->fd, 0, SEEK_CUR));
+		res = read(stream->fd, stream->ptr, BUFFER_SIZE);
+		if (res < 0)
+		{
+			printf("FAILED TO READ\n");
+			printf("READ SO FAR %i\n", totRead);
+			printf("ERROR MSG : %i\n", errno);
+			return MY_EOF;
+		}
+		stream->cnt = res;
+		readAmount = res < remRead ? res : remRead;
+		memcpy(ptr + dStart, stream->ptr, readAmount);
+		totRead += readAmount;
+		stream->cnt -= readAmount;
+		stream->ptr += readAmount;
+		// read into buffer first if read is less than buffer size
+	}
+	return totRead;
 }

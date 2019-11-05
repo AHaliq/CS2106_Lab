@@ -71,6 +71,10 @@ MY_FILE *my_fopen(const char *pathname, const char *mode)
 	f->base = malloc(sizeof(char) * BUFFER_SIZE);
 	f->ptr = f->base;
 	f->cnt = 0;
+	int rdwrbit = open_flags & 0x000F;
+	f->flag_read = rdwrbit == 0x0000 || rdwrbit == 0x0002;
+	f->flag_write = rdwrbit == 0x0001 || rdwrbit == 0x0002;
+	f->flag_justwrote = 0;
 	// TODO: Initialize the other members of your structure
 
 	return f;
