@@ -22,11 +22,15 @@
 #include <string.h>
 
 #define MY_EOF (-1)
+#define BUFFER_SIZE 4096
 
-typedef struct {
-	int fd;
-	// TODO: Define the members of your structure
-} MY_FILE; 
+typedef struct
+{
+	unsigned int fd;		 // file descriptor
+	unsigned char *base; // the buffer
+	unsigned char *ptr;	// current position
+	ssize_t cnt;				 // number of available characters in buffer
+} MY_FILE;
 
 MY_FILE *my_fopen(const char *pathname, const char *mode);
 int my_fclose(MY_FILE *stream);
