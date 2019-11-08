@@ -9,7 +9,6 @@
  *************************************/
 
 #include "my_stdio.h"
-#include <stdio.h>
 
 size_t my_fread(void *ptr, size_t size, size_t nmemb, MY_FILE *stream)
 {
@@ -49,14 +48,9 @@ size_t my_fread(void *ptr, size_t size, size_t nmemb, MY_FILE *stream)
 			totRead += res;
 		}
 		// read direct from if greater than buffer remaining
-		printf("I WANT TO READ %i\n", remRead);
-		printf("I AM AT %ld\n", lseek(stream->fd, 0, SEEK_CUR));
 		res = read(stream->fd, stream->ptr, BUFFER_SIZE);
 		if (res < 0)
 		{
-			printf("FAILED TO READ\n");
-			printf("READ SO FAR %i\n", totRead);
-			printf("ERROR MSG : %i\n", errno);
 			return MY_EOF;
 		}
 		stream->cnt = res;
