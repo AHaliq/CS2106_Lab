@@ -7,4 +7,5 @@ fi
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.
 echo "Calling runner with $ARG"
-./runner < $ARG
+# ./runner < $ARG
+strace ./runner < $ARG
